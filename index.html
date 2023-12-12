@@ -51,14 +51,12 @@
     <div id="result"></div>
 
     <label for="accessToken">Enter Access Token:</label>
-    <input type="text" id="accessToken" placeholder="Type access token...">
-
+    <input type="text" id="accessToken" placeholder="Enter access token...">
     <label for="copyType">Copy Type:</label>
     <select id="copyType">
         <option value="colors">Colors Only</option>
-        <option value="all">All (Colors + Items)</option>
+        <option value="all">All Customizations</option>
     </select>
-
     <button onclick="copyCustomizations()">Copy Customizations</button>
 
     <script>
@@ -147,7 +145,7 @@
                 <div class="category">User Information:</div>
                 <p>User ID: ${userId}</p>
                 <p>Username: ${username}</p>
-                <p>Level Count: ${user.user_level_count || 'N/A'}</p>
+                <p>Level Count: ${user.user_level_count || 'N/A'}</p
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
@@ -163,29 +161,37 @@
             var accessToken = document.getElementById('accessToken').value;
             var copyType = document.getElementById('copyType').value;
 
-            if (!accessToken.trim()) {
+            if (accessToken.trim() === "") {
                 alert("Please enter an access token");
                 return;
             }
 
-            var userIndex = 0; // Assume the first user in the list
-            var user = userData[userIndex];
+            if (!userData || userData.length === 0) {
+                alert("Please search for a user before copying customizations");
+                return;
+            }
 
-            var payload = {
-                player_color_primary: user.active_customizations.player_color_primary.color,
-                player_color_secondary: user.active_customizations.player_color_secondary.color
-            };
-
-            if (copyType === 'all') {
-                payload.items = user.active_customizations.items;
+            var payload;
+            if (copyType === 'colors') {
+                payload = {
+                    player_color_primary: {
+                        color: userData[0].active_customizations.player_color_primary.color
+                    },
+                    player_color_secondary: {
+                        color: userData[0].active_customizations.player_color_secondary
+                            .color
+                    },
+                };
+            } else if (copyType === 'all') {
+                payload = userData[0].active_customizations;
             }
 
             fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payload),
             })
                 .then(response => {
                     if (!response.ok) {
@@ -199,17 +205,14 @@
                     }
                 })
                 .then(data => {
-                    if (typeof data === 'string' && data.toLowerCase() === 'Success') {
+                    if (typeof data === 'string' && data.toLowerCase() === 'success') {
                         console.log("User's active customizations updated successfully.");
-                        alert("User's active customizations updated successfully.");
                     } else {
                         console.error('Unexpected response from server:', data);
-                        alert('Error updating user data');
                     }
                 })
                 .catch(error => {
                     console.error('Error updating user data:', error);
-                    alert('Error updating user data');
                 });
         }
     </script>
