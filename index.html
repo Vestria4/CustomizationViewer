@@ -32,13 +32,6 @@
         button:hover {
             background-color: #009EC6;
         }
-        .blue-button {
-            background-color: #00C8FF;
-            color: #DCDDDE;
-        }
-        .blue-button:hover {
-            background-color: #009EC6;
-        }
         #result {
             margin-top: 20px;
         }
@@ -60,11 +53,11 @@
     <label for="accessToken">Enter Access Token:</label>
     <input type="text" id="accessToken" placeholder="Enter access token...">
     <label for="copyType">Copy Type:</label>
-    <select id="copyType" class="blue-button">
+    <select id="copyType">
         <option value="colors">Colors Only</option>
         <option value="all">All Customizations</option>
     </select>
-    <button onclick="copyCustomizations()" class="blue-button">Copy Customizations</button>
+    <button onclick="copyCustomizations()">Copy Customizations</button>
 
     <script>
         var userData;
@@ -155,7 +148,7 @@
                 <p>Level Count: ${user.user_level_count || 'N/A'}</p
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
-                <p>Verified: ${isCreator ? 'Yes' or 'No'}</p>
+                <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
                 <div class="category">Colors:</div>
                 <p>Main Color: ${mainColor}</p>
                 <p>Secondary Color: ${secondaryColor}</p>
@@ -194,12 +187,12 @@
             }
 
             fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                })
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
