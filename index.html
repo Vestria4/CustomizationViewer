@@ -50,6 +50,7 @@
 
     <div id="result"></div>
 
+    <button onclick="copyCustomizations()">Copy Customizations</button>
     <label for="accessToken">Enter Access Token:</label>
     <input type="text" id="accessToken" placeholder="Type access token...">
     <label for="copyType">Copy Type:</label>
@@ -57,16 +58,9 @@
         <option value="colors">Colors Only</option>
         <option value="all">All Customizations</option>
     </select>
-    <button onclick="copyCustomizations()">Copy Customizations</button>
 
     <script>
-        var userData;
-        var user;
-
         function searchUser() {
-            var resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
-
             var username = document.getElementById('username').value;
             if (username.trim() === "") {
                 alert("Please enter a username");
@@ -79,8 +73,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        userData = data;
-                        displayResults(userData);
+                        displayResults(data);
                     } else {
                         displayResult({ error: 'User not found' });
                     }
@@ -122,7 +115,7 @@
         }
 
         function displayResult(index) {
-            user = userData[index];
+            var user = users[index];
             var resultDiv = document.getElementById('result');
 
             var userId = user.user_id || 'N/A';
@@ -146,7 +139,7 @@
                 <div class="category">User Information:</div>
                 <p>User ID: ${userId}</p>
                 <p>Username: ${username}</p>
-                <p>Level Count: ${user.user_level_count || 'N/A'}</p>
+                <p>Level Count: ${user.user_level_count || 'N/A'}</p
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
@@ -166,19 +159,13 @@
             }
 
             var copyType = document.getElementById('copyType').value;
-            var copyData = {};
+            var copyData = {
+                player_color_primary: user.active_customizations.player_color_primary,
+                player_color_secondary: user.active_customizations.player_color_secondary
+            };
 
-            if (copyType === 'colors') {
-                copyData = {
-                    player_color_primary: {
-                        color: user.active_customizations.player_color_primary.color
-                    },
-                    player_color_secondary: {
-                        color: user.active_customizations.player_color_secondary.color
-                    }
-                };
-            } else if (copyType === 'all') {
-                copyData = user.active_customizations;
+            if (copyType === 'all') {
+                copyData.items = user.active_customizations.items;
             }
 
             fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
@@ -186,11 +173,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    info: {
-                        active_customizations: copyData
-                    }
-                })
+                body: JSON.stringify(copyData)
             })
                 .then(response => response.json())
                 .then(data => {
