@@ -50,19 +50,22 @@
 
     <div id="result"></div>
 
-    <button onclick="copyCustomizations()">Copy Customizations</button>
     <label for="accessToken">Enter Access Token:</label>
-    <input type="text" id="accessToken" placeholder="Type access token...">
+    <input type="text" id="accessToken" placeholder="Enter access token...">
     <label for="copyType">Copy Type:</label>
     <select id="copyType">
         <option value="colors">Colors Only</option>
         <option value="all">All Customizations</option>
     </select>
+    <button onclick="copyCustomizations()">Copy Customizations</button>
 
     <script>
-        var userData; // Variable to store the fetched user data
+        var userData;
 
         function searchUser() {
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
             var username = document.getElementById('username').value;
             if (username.trim() === "") {
                 alert("Please enter a username");
@@ -98,7 +101,6 @@
 
         function displayResults(users) {
             var resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
 
             for (var i = 0; i < users.length; i++) {
                 var user = users[i];
@@ -169,7 +171,7 @@
                 return;
             }
 
-            var user = userData[0]; // Assuming we are working with the first user in the list
+            var user = userData[0];
 
             var copyData = {
                 player_color_primary: {
@@ -193,7 +195,11 @@
             })
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Server Response:', data);
+
                     if (typeof data === 'string' && data.toLowerCase() === 'success') {
+                        alert("User's active customizations updated successfully.");
+                    } else if (data && data.success === true) {
                         alert("User's active customizations updated successfully.");
                     } else {
                         console.error('Unexpected response from server:', data);
