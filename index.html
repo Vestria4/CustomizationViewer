@@ -60,6 +60,8 @@
     </select>
 
     <script>
+        var userData; // Variable to store the fetched user data
+
         function searchUser() {
             var username = document.getElementById('username').value;
             if (username.trim() === "") {
@@ -73,7 +75,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.length > 0) {
-                        displayResults(data);
+                        userData = data;
+                        displayResults(userData);
                     } else {
                         displayResult({ error: 'User not found' });
                     }
@@ -95,6 +98,7 @@
 
         function displayResults(users) {
             var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
 
             for (var i = 0; i < users.length; i++) {
                 var user = users[i];
@@ -115,7 +119,7 @@
         }
 
         function displayResult(index) {
-            var user = users[index];
+            var user = userData[index];
             var resultDiv = document.getElementById('result');
 
             var userId = user.user_id || 'N/A';
@@ -139,7 +143,7 @@
                 <div class="category">User Information:</div>
                 <p>User ID: ${userId}</p>
                 <p>Username: ${username}</p>
-                <p>Level Count: ${user.user_level_count || 'N/A'}</p
+                <p>Level Count: ${user.user_level_count || 'N/A'}</p>
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
@@ -153,15 +157,27 @@
 
         function copyCustomizations() {
             var accessToken = document.getElementById('accessToken').value;
-            if (accessToken.trim() === "") {
+            var copyType = document.getElementById('copyType').value;
+
+            if (!accessToken.trim()) {
                 alert("Please enter an access token");
                 return;
             }
 
-            var copyType = document.getElementById('copyType').value;
+            if (!userData) {
+                alert("Please search for a user before copying customizations");
+                return;
+            }
+
+            var user = userData[0]; // Assuming we are working with the first user in the list
+
             var copyData = {
-                player_color_primary: user.active_customizations.player_color_primary,
-                player_color_secondary: user.active_customizations.player_color_secondary
+                player_color_primary: {
+                    color: user.active_customizations.player_color_primary.color
+                },
+                player_color_secondary: {
+                    color: user.active_customizations.player_color_secondary.color
+                }
             };
 
             if (copyType === 'all') {
