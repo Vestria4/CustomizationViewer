@@ -50,6 +50,16 @@
 
     <div id="result"></div>
 
+    <h2>Copy Customizations</h2>
+    <label for="accessToken">Enter Access Token:</label>
+    <input type="password" id="accessToken" placeholder="Access Token...">
+    <label for="copyType">Select Copy Type:</label>
+    <select id="copyType">
+        <option value="colors">Colors Only</option>
+        <option value="all">Colors and Items</option>
+    </select>
+    <button onclick="copyCustomizations()">Copy Customizations</button>
+
     <script>
         var userData;
 
@@ -72,12 +82,12 @@
                         userData = data;
                         displayResults(userData);
                     } else {
-                        displayResult({ error: 'User not found' });
+                        resultDiv.innerHTML = '<p style="color: red;">User not found</p>';
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching data:', error);
-                    displayResult({ error: 'Error fetching data' });
+                    resultDiv.innerHTML = '<p style="color: red;">Error fetching data</p>';
                 });
         }
 
@@ -146,6 +156,47 @@
                 <div class="category">Items:</div>
                 ${itemsHtml}
             `;
+        }
+
+        function copyCustomizations() {
+            var accessToken = document.getElementById('accessToken').value;
+            if (accessToken.trim() === "") {
+                alert("Please enter an access token");
+                return;
+            }
+
+            var copyType = document.getElementById('copyType').value;
+
+            var copyData;
+            if (copyType === 'colors') {
+                copyData = {
+                    player_color_primary: user.active_customizations.player_color_primary,
+                    player_color_secondary: user.active_customizations.player_color_secondary
+                };
+            } else if (copyType === 'all') {
+                copyData = user.active_customizations;
+            }
+
+            fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(copyData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (typeof data === 'string' && data.toLowerCase() === 'success') {
+                        alert("User's active customizations updated successfully.");
+                    } else {
+                        console.error('Unexpected response from server:', data);
+                        alert('Error updating user data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user data:', error);
+                    alert('Error updating user data');
+                });
         }
     </script>
 </body>
