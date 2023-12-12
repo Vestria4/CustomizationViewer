@@ -5,17 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GRAB Active Customizations</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #222222; color: #DCDDDE; }
-        label { display: block; margin-bottom: 5px; }
-        input { margin-bottom: 10px; padding: 8px; background-color: #23272A; color: #DCDDDE; border: 1px solid #4E5258; }
-        button { padding: 8px 12px; background-color: #00C8FF; color: #DCDDDE; border: none; cursor: pointer; }
-        button:hover { background-color: #009EC6; }
-        #result { margin-top: 20px; }
-        .category { font-weight: bold; margin-top: 10px; color: #00C8FF; }
-        #custom-confirm { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); z-index: 9999; }
-        #custom-confirm p { margin-bottom: 15px; }
-        #custom-confirm button { padding: 10px; background-color: #00C8FF; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-        #custom-confirm button.cancel { background-color: #DCDDDE; color: #333; margin-left: 10px; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #222222;
+            color: #DCDDDE;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #23272A;
+            color: #DCDDDE;
+            border: 1px solid #4E5258;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #00C8FF;
+            color: #DCDDDE;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #009EC6;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .category {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #00C8FF;
+        }
     </style>
 </head>
 <body>
@@ -25,7 +49,17 @@
     <button onclick="searchUser()">Search</button>
 
     <div id="result"></div>
-    <div id="custom-confirm"></div>
+
+    <label for="accessToken">Enter Access Token:</label>
+    <input type="text" id="accessToken" placeholder="Type access token...">
+
+    <label for="copyType">Copy Type:</label>
+    <select id="copyType">
+        <option value="colors">Colors Only</option>
+        <option value="all">All (Colors + Items)</option>
+    </select>
+
+    <button onclick="copyCustomizations()">Copy Customizations</button>
 
     <script>
         var userData;
@@ -113,7 +147,7 @@
                 <div class="category">User Information:</div>
                 <p>User ID: ${userId}</p>
                 <p>Username: ${username}</p>
-                <p>Level Count: ${user.user_level_count || 'N/A'}</p
+                <p>Level Count: ${user.user_level_count || 'N/A'}</p>
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
@@ -122,34 +156,37 @@
                 <p>Secondary Color: ${secondaryColor}</p>
                 <div class="category">Items:</div>
                 ${itemsHtml}
-                <button onclick="copyCustomizations()">Copy Customizations</button>
             `;
         }
 
         function copyCustomizations() {
-            var accessToken = prompt('Enter Access Token:');
-            if (!accessToken) {
-                alert('Access Token is required.');
+            var accessToken = document.getElementById('accessToken').value;
+            var copyType = document.getElementById('copyType').value;
+
+            if (!accessToken.trim()) {
+                alert("Please enter an access token");
                 return;
             }
 
-            customConfirm('Copy Items as well?', function (copyItems) {
-                var activeCustomizations = {
-                    player_color_primary: user.active_customizations.player_color_primary,
-                    player_color_secondary: user.active_customizations.player_color_secondary
-                };
+            var userIndex = 0; // Assume the first user in the list
+            var user = userData[userIndex];
 
-                if (copyItems) {
-                    activeCustomizations.items = user.active_customizations.items;
-                }
+            var payload = {
+                player_color_primary: user.active_customizations.player_color_primary.color,
+                player_color_secondary: user.active_customizations.player_color_secondary.color
+            };
 
-                fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(activeCustomizations)
-                })
+            if (copyType === 'all') {
+                payload.items = user.active_customizations.items;
+            }
+
+            fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
@@ -162,38 +199,18 @@
                     }
                 })
                 .then(data => {
-                    if (typeof data === 'string' && data.toLowerCase() === 'success') {
+                    if (typeof data === 'string' && data.toLowerCase() === 'Success') {
                         console.log("User's active customizations updated successfully.");
                         alert("User's active customizations updated successfully.");
                     } else {
                         console.error('Unexpected response from server:', data);
+                        alert('Error updating user data');
                     }
                 })
                 .catch(error => {
                     console.error('Error updating user data:', error);
                     alert('Error updating user data');
                 });
-            });
-        }
-
-        function customConfirm(message, callback) {
-            var confirmBox = document.getElementById('custom-confirm');
-            confirmBox.innerHTML = `
-                <p>${message}</p>
-                <button onclick="customConfirmOK()">Ok</button>
-                <button class="cancel" onclick="customConfirmCancel()">Cancel</button>
-            `;
-            confirmBox.style.display = 'block';
-
-            window.customConfirmOK = function () {
-                confirmBox.style.display = 'none';
-                callback(true);
-            };
-
-            window.customConfirmCancel = function () {
-                confirmBox.style.display = 'none';
-                callback(false);
-            };
         }
     </script>
 </body>
