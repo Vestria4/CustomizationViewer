@@ -50,17 +50,6 @@
 
     <div id="result"></div>
 
-    <label for="accessToken">Enter Access Token:</label>
-    <input type="text" id="accessToken" placeholder="Type access token...">
-
-    <label for="copyType">Copy Type:</label>
-    <select id="copyType">
-        <option value="colors">Colors Only</option>
-        <option value="all">All (Colors + Items)</option>
-    </select>
-
-    <button onclick="copyCustomizations()">Copy Customizations</button>
-
     <script>
         var userData;
 
@@ -147,7 +136,7 @@
                 <div class="category">User Information:</div>
                 <p>User ID: ${userId}</p>
                 <p>Username: ${username}</p>
-                <p>Level Count: ${user.user_level_count || 'N/A'}</p>
+                <p>Level Count: ${user.user_level_count || 'N/A'}</p
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
@@ -156,36 +145,26 @@
                 <p>Secondary Color: ${secondaryColor}</p>
                 <div class="category">Items:</div>
                 ${itemsHtml}
+                <button onclick="copyCustomizations()">Copy Customizations</button>
             `;
         }
 
         function copyCustomizations() {
-            var accessToken = document.getElementById('accessToken').value;
-            var copyType = document.getElementById('copyType').value;
-
-            if (!accessToken.trim()) {
-                alert("Please enter an access token");
+            var accessToken = prompt('Enter Access Token:');
+            if (!accessToken) {
+                alert('Access Token is required.');
                 return;
             }
 
-            if (!userData) {
-                alert("Please search for a user before copying customizations");
-                return;
-            }
+            var copyItems = confirm('Copy Items as well?');
 
-            var user = userData[0];
-
-            var copyData = {
-                player_color_primary: {
-                    color: user.active_customizations.player_color_primary.color
-                },
-                player_color_secondary: {
-                    color: user.active_customizations.player_color_secondary.color
-                }
+            var activeCustomizations = {
+                player_color_primary: user.active_customizations.player_color_primary,
+                player_color_secondary: user.active_customizations.player_color_secondary
             };
 
-            if (copyType === 'all') {
-                copyData.items = user.active_customizations.items;
+            if (copyItems) {
+                activeCustomizations.items = user.active_customizations.items;
             }
 
             fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
@@ -193,23 +172,31 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(copyData)
+                body: JSON.stringify(activeCustomizations)
             })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Server Response:', data);
-
-                    if (data && (typeof data === 'string' && data.toLowerCase() === 'success' || data.success === true)) {
-                        alert("User's active customizations updated successfully.");
-                    } else {
-                        console.error('Unexpected response from server:', data);
-                        alert('Error updating user data');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error updating user data:', error);
-                    alert('Error updating user data');
-                });
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    return response.text();
+                }
+            })
+            .then(data => {
+                if (typeof data === 'string' && data.toLowerCase() === 'success') {
+                    console.log("User's active customizations updated successfully.");
+                    alert("User's active customizations updated successfully.");
+                } else {
+                    console.error('Unexpected response from server:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user data:', error);
+                alert('Error updating user data');
+            });
         }
     </script>
 </body>
