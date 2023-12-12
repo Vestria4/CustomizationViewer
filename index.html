@@ -8,8 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #222222;
-            color: #DCDDDE;
+            background-color: #222222; /* Slightly darker grey background color */
+            color: #DCDDDE; /* Light text color */
         }
         label {
             display: block;
@@ -18,19 +18,19 @@
         input {
             margin-bottom: 10px;
             padding: 8px;
-            background-color: #23272A;
-            color: #DCDDDE;
-            border: 1px solid #4E5258;
+            background-color: #23272A; /* Darker grey input background color */
+            color: #DCDDDE; /* Light text color */
+            border: 1px solid #4E5258; /* Border color */
         }
         button {
             padding: 8px 12px;
-            background-color: #00C8FF;
-            color: #DCDDDE;
+            background-color: #00C8FF; /* Bright blue color */
+            color: #DCDDDE; /* Light text color */
             border: none;
             cursor: pointer;
         }
         button:hover {
-            background-color: #009EC6;
+            background-color: #009EC6; /* Darker blue color on hover */
         }
         #result {
             margin-top: 20px;
@@ -38,7 +38,35 @@
         .category {
             font-weight: bold;
             margin-top: 10px;
-            color: #00C8FF;
+            color: #00C8FF; /* Bright blue color for category headers */
+        }
+        #custom-confirm {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+        }
+        #custom-confirm p {
+            margin-bottom: 15px;
+        }
+        #custom-confirm button {
+            padding: 10px;
+            background-color: #00C8FF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #custom-confirm button.cancel {
+            background-color: #DCDDDE;
+            color: #333;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -50,10 +78,13 @@
 
     <div id="result"></div>
 
+    <div id="custom-confirm"></div>
+
     <script>
-        var userData;
+        var userData; // Variable to store the fetched user data
 
         function searchUser() {
+            // Clear previous results
             var resultDiv = document.getElementById('result');
             resultDiv.innerHTML = '';
 
@@ -63,11 +94,14 @@
                 return;
             }
 
+            // Assuming the API endpoint is valid
             var apiUrl = 'https://api.slin.dev/grab/v1/list?type=user_name&search_term=' + username;
 
+            // Making a simple AJAX request using Fetch API
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
+                    // Assuming the response structure is an array with user details
                     if (data.length > 0) {
                         userData = data;
                         displayResults(userData);
@@ -83,6 +117,7 @@
 
         function capitalizeEachWord(string) {
             return string.replace(/\b\w/g, function (char, index) {
+                // Capitalize the first character of each word
                 if (index === 0 || string[index - 1] === '/' || string[index - 1] === ' ') {
                     return char.toUpperCase();
                 }
@@ -156,46 +191,46 @@
                 return;
             }
 
-            var copyItems = confirm('Copy Items as well?');
+            customConfirm('Copy Items as well?', function (copyItems) {
+                var activeCustomizations = {
+                    player_color_primary: user.active_customizations.player_color_primary,
+                    player_color_secondary: user.active_customizations.player_color_secondary
+                };
 
-            var activeCustomizations = {
-                player_color_primary: user.active_customizations.player_color_primary,
-                player_color_secondary: user.active_customizations.player_color_secondary
-            };
+                if (copyItems) {
+                    activeCustomizations.items = user.active_customizations.items;
+                }
 
-            if (copyItems) {
-                activeCustomizations.items = user.active_customizations.items;
-            }
-
-            fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(activeCustomizations)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    return response.json();
-                } else {
-                    return response.text();
-                }
-            })
-            .then(data => {
-                if (typeof data === 'string' && data.toLowerCase() === 'success') {
-                    console.log("User's active customizations updated successfully.");
-                    alert("User's active customizations updated successfully.");
-                } else {
-                    console.error('Unexpected response from server:', data);
-                }
-            })
-            .catch(error => {
-                console.error('Error updating user data:', error);
-                alert('Error updating user data');
+                fetch(`https://api.slin.dev/grab/v1/set_active_customizations?access_token=${accessToken}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(activeCustomizations)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        return response.text();
+                    }
+                })
+                .then(data => {
+                    if (typeof data === 'string' && data.toLowerCase() === 'success') {
+                        console.log("User's active customizations updated successfully.");
+                        alert("User's active customizations updated successfully.");
+                    } else {
+                        console.error('Unexpected response from server:', data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating user data:', error);
+                    alert('Error updating user data');
+                });
             });
         }
     </script>
