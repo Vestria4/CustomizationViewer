@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRAB Active Customizations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #222222;
+            color: #DCDDDE;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #23272A;
+            color: #DCDDDE;
+            border: 1px solid #4E5258;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #00C8FF;
+            color: #DCDDDE;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #009EC6;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .category {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #00C8FF;
+        }
+    </style>
+</head>
+<body>
+    <h2>GRAB Active Customizations</h2>
+    <label for="username">Enter Username:</label>
+    <input type="text" id="username" placeholder="Type username...">
+    <button onclick="searchUser()">Search</button>
+
+    <div id="result"></div>
+
+    <script>
+        var userData;
+
+        function searchUser() {
+            var resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            var username = document.getElementById('username').value;
+            if (username.trim() === "") {
+                alert("Please enter a username");
+                return;
+            }
+
+            var apiUrl = 'https://api.slin.dev/grab/v1/list?type=user_name&search_term=' + username;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length > 0) {
+                        userData = data;
+                        displayResults(userData);
+                    } else {
+                        displayResult({ error: 'User not found' });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    displayResult({ error: 'Error fetching data' });
+                });
+        }
+
+        function capitalizeEachWord(string) {
+            return string.replace(/\b\w/g, function (char, index) {
+                if (index === 0 || string[index - 1] === '/' || string[index - 1] === ' ') {
+                    return char.toUpperCase();
+                }
+                return char;
+            });
+        }
+
+        function displayResults(users) {
+            var resultDiv = document.getElementById('result');
+
+            for (var i = 0; i < users.length; i++) {
+                var user = users[i];
+                var userId = user.user_id || 'N/A';
+                var username = user.user_name || 'N/A';
+                var userLevelCount = user.user_level_count || 0;
+
+                var userDiv = document.createElement('div');
+                userDiv.innerHTML = `
+                    <div class="category">User Information (${i + 1}):</div>
+                    <p>User ID: ${userId}</p>
+                    <p>Username: ${username}</p>
+                    <p>Level Count: ${userLevelCount}</p>
+                    <button onclick="displayResult(${i})">Show Details</button>
+                `;
+                resultDiv.appendChild(userDiv);
+            }
+        }
+
+        function displayResult(index) {
+            var user = userData[index];
+            var resultDiv = document.getElementById('result');
+
+            var userId = user.user_id || 'N/A';
+            var username = user.user_name || 'N/A';
+            var isAdmin = user.is_admin || false;
+            var isModerator = user.is_moderator || false;
+            var isCreator = user.is_creator || false;
+            var mainColor = user.active_customizations.player_color_primary.color.join(', ') || 'N/A';
+            var secondaryColor = user.active_customizations.player_color_secondary.color.join(', ') || 'N/A';
+
+            var itemsHtml = '';
+            for (var category in user.active_customizations.items) {
+                var categoryName = capitalizeEachWord(category);
+                var itemName = user.active_customizations.items[category].replace(/_/g, ' ');
+                itemName = capitalizeEachWord(itemName);
+
+                itemsHtml += `<p>${categoryName}: ${itemName}</p>`;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="category">User Information:</div>
+                <p>User ID: ${userId}</p>
+                <p>Username: ${username}</p>
+                <p>Level Count: ${user.user_level_count || 0}</p>
+                <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
+                <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
+                <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
+                <div class="category">Colors:</div>
+                <p>Main Color: ${mainColor}</p>
+                <p>Secondary Color: ${secondaryColor}</p>
+                <div class="category">Items:</div>
+                ${itemsHtml}
+            `;
+        }
+    </script>
+</body>
+</html>
