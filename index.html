@@ -129,6 +129,7 @@
             var isAdmin = user.is_admin || false;
             var isModerator = user.is_moderator || false;
             var isCreator = user.is_creator || false;
+            var isVerifier =user.is_verifier || false;
             var mainColor = user.active_customizations.player_color_primary.color.join(', ') || 'N/A';
             var secondaryColor = user.active_customizations.player_color_secondary.color.join(', ') || 'N/A';
 
@@ -149,6 +150,7 @@
                 <p>Admin: ${isAdmin ? 'Yes' : 'No'}</p>
                 <p>Moderator: ${isModerator ? 'Yes' : 'No'}</p>
                 <p>Verified: ${isCreator ? 'Yes' : 'No'}</p>
+                <p>Verifier: ${isVerifier ? 'Yes' : 'No'}</p>
                 <div class="category">Colors:</div>
                 <p>Main Color: ${mainColor}</p>
                 <p>Secondary Color: ${secondaryColor}</p>
